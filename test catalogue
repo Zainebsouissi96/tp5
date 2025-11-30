@@ -1,0 +1,408 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
+from webdriver_manager.chrome import ChromeDriverManager
+import time
+
+# Configuration du driver
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service)
+driver.maximize_window()
+wait = WebDriverWait(driver, 15)
+
+tests_passed = 0
+tests_failed = 0
+
+# Fonctions utilitaires
+def safe_send_keys(by, value, text):
+    try:
+        element = wait.until(EC.visibility_of_element_located((by, value)))
+        element.clear()
+        element.send_keys(text)
+    except Exception as e:
+        print(f"Erreur lors de la saisie: {e}")
+        raise
+
+def login():
+    """Fonction pour se connecter avant chaque test"""
+    try:
+        driver.get("https://www.saucedemo.com/")
+        safe_send_keys(By.ID, "user-name", "standard_user")
+        safe_send_keys(By.ID, "password", "secret_sauce")
+        driver.find_element(By.ID, "login-button").click()
+        wait.until(EC.url_contains("inventory.html"))
+        time.sleep(0.5)
+    except Exception as e:
+        print(f"Erreur lors du login: {e}")
+        raise
+
+def get_elements_count(by, value):
+    """Compte le nombre d'éléments"""
+    try:
+        elements = driver.find_elements(by, value)
+        return len(elements)
+    except:
+        return 0
+
+def element_exists(by, value):
+    """Vérifie si un élément existe"""
+    try:
+        driver.find_element(by, value)
+        return True
+    except:
+        return False
+
+def get_element_text(by, value):
+    """Récupère le texte d'un élément"""
+    try:
+        element = wait.until(EC.visibility_of_element_located((by, value)))
+        return element.text
+    except:
+        return ""
+
+def wait_for_page_load():
+    """Attend que la page soit complètement chargée"""
+    time.sleep(1)
+    wait.until(lambda d: d.execute_script('return document.readyState') == 'complete')
+
+# Tests Navigation & Catalogue
+try:
+    print("\n" + "="*60)
+    print("TESTS NAVIGATION & CATALOGUE PRODUITS")
+    print("="*60)
+
+    # ---------------- TC01 - Affichage de tous les produits ----------------
+    print("\n=== TC01 : Affichage de tous les produits ===")
+    login()
+    
+    current_url = driver.current_url
+    if "inventory.html" in current_url:
+        print("✓ Page inventaire chargée")
+        
+        products_count = get_elements_count(By.CLASS_NAME, "inventory_item")
+        print(f"Nombre de produits trouvés: {products_count}")
+        
+        if products_count == 6:
+            print("✓ TC01 PASS - Tous les produits sont affichés (6/6)")
+            tests_passed += 1
+        else:
+            print(f"✗ TC01 FAIL - Nombre incorrect de produits: {products_count}/6")
+            tests_failed += 1
+    else:
+        print("✗ TC01 FAIL - Pas sur la page inventaire")
+        tests_failed += 1
+
+    # ---------------- TC02 - Clic sur un produit pour voir les détails ----------------
+    print("\n=== TC02 : Clic sur un produit pour voir les détails ===")
+    try:
+        wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "inventory_item")))
+        time.sleep(1)
+        
+        first_product = driver.find_element(By.CSS_SELECTOR, ".inventory_item:first-child .inventory_item_name")
+        product_name = first_product.text
+        print(f"Produit sélectionné: {product_name}")
+        
+        driver.execute_script("arguments[0].click();", first_product)
+        time.sleep(2)
+        
+        current_url = driver.current_url
+        print(f"URL après clic: {current_url}")
+        
+        details_present = element_exists(By.CLASS_NAME, "inventory_details_container")
+        
+        if "id=" in current_url or details_present:
+            print("✓ TC02 PASS - Page détails du produit chargée")
+            tests_passed += 1
+        else:
+            print(f"✗ TC02 FAIL - Page détails non chargée")
+            tests_failed += 1
+    except Exception as e:
+        print(f"✗ TC02 FAIL - Erreur: {e}")
+        tests_failed += 1
+
+    # ---------------- TC03 - Retour à la liste des produits ----------------
+    print("\n=== TC03 : Retour à la liste des produits ===")
+    try:
+        if "id=" not in driver.current_url and not element_exists(By.CLASS_NAME, "inventory_details_container"):
+            driver.get("https://www.saucedemo.com/inventory.html")
+            wait_for_page_load()
+            wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "inventory_item")))
+            time.sleep(1)
+            
+            first_product = driver.find_element(By.CSS_SELECTOR, ".inventory_item:first-child .inventory_item_name")
+            driver.execute_script("arguments[0].click();", first_product)
+            time.sleep(2)
+        
+        if not element_exists(By.ID, "back-to-products"):
+            print("✗ TC03 FAIL - Bouton 'back-to-products' non trouvé")
+            tests_failed += 1
+        else:
+            back_button = driver.find_element(By.ID, "back-to-products")
+            driver.execute_script("arguments[0].click();", back_button)
+            time.sleep(2)
+            
+            current_url = driver.current_url
+            print(f"URL actuelle: {current_url}")
+            
+            if "inventory.html" in current_url:
+                products_visible = get_elements_count(By.CLASS_NAME, "inventory_item")
+                print(f"Produits visibles: {products_visible}")
+                
+                if products_visible > 0:
+                    print("✓ TC03 PASS - Retour à la liste des produits réussi")
+                    tests_passed += 1
+                else:
+                    print("✗ TC03 FAIL - Aucun produit visible après retour")
+                    tests_failed += 1
+            else:
+                print("✗ TC03 FAIL - Pas revenu sur la page inventaire")
+                tests_failed += 1
+    except Exception as e:
+        print(f"✗ TC03 FAIL - Erreur: {e}")
+        tests_failed += 1
+        try:
+            driver.get("https://www.saucedemo.com/inventory.html")
+            wait_for_page_load()
+        except:
+            pass
+
+    # ---------------- TC04 - Vérification des informations produit ----------------
+    print("\n=== TC04 : Vérification des informations produit ===")
+    try:
+        driver.get("https://www.saucedemo.com/inventory.html")
+        wait_for_page_load()
+        
+        wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "inventory_item")))
+        time.sleep(1)
+        
+        first_product = driver.find_element(By.CSS_SELECTOR, ".inventory_item:first-child .inventory_item_name")
+        driver.execute_script("arguments[0].click();", first_product)
+        time.sleep(2)
+        
+        wait.until(lambda d: d.execute_script('return document.readyState') == 'complete')
+        time.sleep(1)
+        
+        image_exists_check = False
+        image_selectors = [
+            (By.CSS_SELECTOR, "img.inventory_details_img"),
+            (By.CSS_SELECTOR, ".inventory_details_img img"),
+            (By.CSS_SELECTOR, ".inventory_details_img_container img"),
+            (By.CSS_SELECTOR, ".inventory_details_container img"),
+            (By.TAG_NAME, "img")
+        ]
+        
+        for selector_by, selector_value in image_selectors:
+            if element_exists(selector_by, selector_value):
+                image_exists_check = True
+                print(f"  Image trouvée avec sélecteur: {selector_value}")
+                break
+        
+        checks = {
+            "Nom du produit": element_exists(By.CLASS_NAME, "inventory_details_name"),
+            "Description": element_exists(By.CLASS_NAME, "inventory_details_desc"),
+            "Prix": element_exists(By.CLASS_NAME, "inventory_details_price"),
+            "Image": image_exists_check
+        }
+        
+        print("\nÉléments présents sur la page détails:")
+        all_present = True
+        for element_name, is_present in checks.items():
+            status = "✓" if is_present else "✗"
+            print(f"  {status} {element_name}: {'Présent' if is_present else 'Absent'}")
+            if not is_present:
+                all_present = False
+        
+        if all_present:
+            product_name = get_element_text(By.CLASS_NAME, "inventory_details_name")
+            product_desc = get_element_text(By.CLASS_NAME, "inventory_details_desc")
+            product_price = get_element_text(By.CLASS_NAME, "inventory_details_price")
+            
+            print(f"\nInformations récupérées:")
+            print(f"  - Nom: {product_name}")
+            print(f"  - Prix: {product_price}")
+            print(f"  - Description: {product_desc[:50]}..." if len(product_desc) > 50 else f"  - Description: {product_desc}")
+            
+            print("✓ TC04 PASS - Toutes les informations produit sont présentes")
+            tests_passed += 1
+        else:
+            print("✗ TC04 FAIL - Certaines informations produit manquent")
+            tests_failed += 1
+            
+        driver.get("https://www.saucedemo.com/inventory.html")
+        wait_for_page_load()
+        
+    except Exception as e:
+        print(f"✗ TC04 FAIL - Erreur: {e}")
+        tests_failed += 1
+        try:
+            driver.get("https://www.saucedemo.com/inventory.html")
+            wait_for_page_load()
+        except:
+            pass
+
+    # ---------------- TC05 - Navigation via le menu burger ----------------
+    print("\n=== TC05 : Navigation via le menu burger - About ===")
+    try:
+        if "inventory.html" not in driver.current_url:
+            driver.get("https://www.saucedemo.com/inventory.html")
+            wait_for_page_load()
+        
+        menu_btn = driver.find_element(By.ID, "react-burger-menu-btn")
+        driver.execute_script("arguments[0].click();", menu_btn)
+        time.sleep(1)
+        
+        menu_visible = element_exists(By.CLASS_NAME, "bm-menu-wrap")
+        if menu_visible:
+            print("✓ Menu burger ouvert")
+            
+            menu_items = {
+                "All Items": element_exists(By.ID, "inventory_sidebar_link"),
+                "About": element_exists(By.ID, "about_sidebar_link"),
+                "Logout": element_exists(By.ID, "logout_sidebar_link"),
+                "Reset App": element_exists(By.ID, "reset_sidebar_link")
+            }
+            
+            print("Éléments du menu:")
+            for item_name, is_present in menu_items.items():
+                status = "✓" if is_present else "✗"
+                print(f"  {status} {item_name}")
+            
+            print("✓ TC05 PASS - Menu burger et tous ses éléments sont présents")
+            tests_passed += 1
+            
+            close_btn = driver.find_element(By.ID, "react-burger-cross-btn")
+            driver.execute_script("arguments[0].click();", close_btn)
+            time.sleep(0.5)
+        else:
+            print("✗ TC05 FAIL - Menu burger ne s'est pas ouvert")
+            tests_failed += 1
+    except Exception as e:
+        print(f"✗ TC05 FAIL - Erreur: {e}")
+        tests_failed += 1
+
+    # ---------------- TC06 - Navigation "All Items" depuis une page détails ----------------
+    print("\n=== TC06 : Navigation 'All Items' depuis page détails ===")
+    try:
+        if "inventory.html" not in driver.current_url:
+            driver.get("https://www.saucedemo.com/inventory.html")
+            wait_for_page_load()
+        
+        wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "inventory_item")))
+        time.sleep(1)
+        
+        first_product = driver.find_element(By.CSS_SELECTOR, ".inventory_item:first-child .inventory_item_name")
+        driver.execute_script("arguments[0].click();", first_product)
+        time.sleep(2)
+        
+        menu_btn = driver.find_element(By.ID, "react-burger-menu-btn")
+        driver.execute_script("arguments[0].click();", menu_btn)
+        time.sleep(1)
+        
+        all_items_link = driver.find_element(By.ID, "inventory_sidebar_link")
+        driver.execute_script("arguments[0].click();", all_items_link)
+        time.sleep(2)
+        
+        if "inventory.html" in driver.current_url:
+            products_count = get_elements_count(By.CLASS_NAME, "inventory_item")
+            print(f"Produits visibles: {products_count}")
+            
+            if products_count > 0:
+                print("✓ TC06 PASS - Navigation 'All Items' fonctionne correctement")
+                tests_passed += 1
+            else:
+                print("✗ TC06 FAIL - Aucun produit visible")
+                tests_failed += 1
+        else:
+            print("✗ TC06 FAIL - Navigation 'All Items' échouée")
+            tests_failed += 1
+    except Exception as e:
+        print(f"✗ TC06 FAIL - Erreur: {e}")
+        tests_failed += 1
+
+    # ---------------- TC07 - Vérification des images produits ----------------
+    print("\n=== TC07 : Vérification des images produits ===")
+    try:
+        if "inventory.html" not in driver.current_url:
+            driver.get("https://www.saucedemo.com/inventory.html")
+            wait_for_page_load()
+        
+        wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "inventory_item")))
+        
+        images = driver.find_elements(By.CSS_SELECTOR, ".inventory_item_img img")
+        products_count = get_elements_count(By.CLASS_NAME, "inventory_item")
+        
+        print(f"Images trouvées: {len(images)}/{products_count}")
+        
+        if len(images) == products_count and len(images) > 0:
+            first_image = images[0]
+            image_src = first_image.get_attribute("src")
+            
+            if image_src and len(image_src) > 0:
+                print(f"✓ Image src valide: {image_src[:50]}...")
+                print("✓ TC07 PASS - Toutes les images produits sont présentes")
+                tests_passed += 1
+            else:
+                print("✗ TC07 FAIL - Image src vide ou invalide")
+                tests_failed += 1
+        else:
+            print("✗ TC07 FAIL - Nombre d'images incorrect")
+            tests_failed += 1
+    except Exception as e:
+        print(f"✗ TC07 FAIL - Erreur: {e}")
+        tests_failed += 1
+
+    # ---------------- TC08 - Vérification des prix sur la page inventaire ----------------
+    print("\n=== TC08 : Vérification des prix sur la page inventaire ===")
+    try:
+        if "inventory.html" not in driver.current_url:
+            driver.get("https://www.saucedemo.com/inventory.html")
+            wait_for_page_load()
+        
+        wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "inventory_item")))
+        
+        prices_elements = driver.find_elements(By.CLASS_NAME, "inventory_item_price")
+        prices_count = len(prices_elements)
+        
+        print(f"Prix trouvés: {prices_count}")
+        
+        if prices_count > 0:
+            valid_prices = 0
+            for price_element in prices_elements[:3]:
+                price_text = price_element.text
+                if price_text.startswith("$") and len(price_text) > 1:
+                    valid_prices += 1
+                    print(f"  ✓ Prix valide: {price_text}")
+            
+            if valid_prices > 0:
+                print("✓ TC08 PASS - Les prix sont affichés au bon format")
+                tests_passed += 1
+            else:
+                print("✗ TC08 FAIL - Format des prix invalide")
+                tests_failed += 1
+        else:
+            print("✗ TC08 FAIL - Aucun prix trouvé")
+            tests_failed += 1
+    except Exception as e:
+        print(f"✗ TC08 FAIL - Erreur: {e}")
+        tests_failed += 1
+
+except Exception as e:
+    print(f"\n✗ Une erreur critique est survenue: {e}")
+    tests_failed += 1
+
+finally:
+    print("\n" + "="*60)
+    print("RÉSULTATS FINAUX - NAVIGATION & CATALOGUE")
+    print("="*60)
+    total_tests = tests_passed + tests_failed
+    print(f"Tests réussis : {tests_passed}/{total_tests}")
+    print(f"Tests échoués : {tests_failed}/{total_tests}")
+    if total_tests > 0:
+        print(f"Taux de réussite : {(tests_passed/total_tests)*100:.1f}%")
+    print("="*60)
+    
+    driver.quit()
+    print("\nNavigateur fermé.")

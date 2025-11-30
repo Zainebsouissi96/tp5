@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/pink"
+    tools:context=".MainActivity" >
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+
+                <ImageView
+                    android:id="@+id/imageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    app:srcCompat="@drawable/component_1_hdpi" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Bienvenue sur Esprit"
+                        android:textAlignment="center"
+                        android:textColor="@color/red"
+                        android:textSize="23sp"
+                        android:textStyle="bold"
+                        />
+
+
+                    <TextView
+                        android:id="@+id/textView3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Connectez-vous à votre compte"
+                        android:textAlignment="center"
+                        android:textColor="@color/red"
+                        android:textSize="20sp"
+                        />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/txtformal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="0dp"
+                        android:shadowColor="#F64E60"
+                        android:textAlignment="center"
+                        android:textColor="#F64E60"
+                        android:textColorHighlight="#F64E60"
+                        android:textSize="11sp"
+                        android:text="" />
+                    <EditText
+                        android:id="@+id/editTextUsername"
+                        android:layout_width="390dp"
+                        android:layout_height="50dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginTop="30dp"
+                        android:background="@drawable/inputstyle"
+                        android:ems="10"
+                        android:textColor="@color/Gray"
+                        android:hint="@string/log_username"
+                        android:padding="10dp"
+                        android:textSize="20sp"
+                        android:inputType="text"
+                        android:text="Nom d'utilisateur" />
+
+                    <TextView
+                        android:id="@+id/txtusername"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="0dp"
+                        android:shadowColor="#F64E60"
+                        android:textColor="#F64E60"
+                        android:textColorHighlight="#F64E60"
+                        android:textSize="11sp"/>
+
+                    <EditText
+                        android:id="@+id/editTextPassword"
+                        android:layout_width="390dp"
+                        android:layout_height="50dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginTop="30dp"
+                        android:background="@drawable/inputstyle"
+                        android:ems="10"
+                        android:textColor="@color/Gray"
+                        android:hint="***********"
+                        android:padding="10dp"
+                        android:textSize="20sp"
+                        android:text="textview"
+                        android:inputType="textPassword" />
+
+                    <TextView
+                        android:id="@+id/txtpwd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="0dp"
+                        android:shadowColor="#F64E60"
+                        android:textColor="#F64E60"
+                        android:textColorHighlight="#F64E60"
+                        android:textSize="11sp"
+                       />
+
+                    <TextView
+                        android:id="@+id/textView9"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:textAlignment="textEnd"
+                        android:textColor="@color/red"
+                        android:textSize="20sp"
+                        android:text ="mot dee passe oublié" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btnconnect1"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:text="Se connecter"
+                            android:textColor="@android:color/white"
+                            android:background="@drawable/btnstyle"
+                            android:textSize="20sp"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

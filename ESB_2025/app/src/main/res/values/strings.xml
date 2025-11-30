@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name" translatable="false">ESB6_2025</string>
+    <string name="log_f1msg">Bienvenue sur Esprit</string>
+    <string name="log_f2msg">Connectez-vous à votre compte</string>
+    <string name="log_username">Nom d'utilisateur</string>
+    <string name="log_pwd">Mot de passe oublié?</string>
+    <string name="log_cnx">Se connecter</string>
+    <string name="log_err_requis">Ce champ est requis</string>
+    <string name="log_err_cnx">Nom d'utilisateur ou mot de passe incorrect!</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ESB6_2025</string>
+    <string name="log_f1msg">"welcome to Esprit "</string>
+    <string name="log_f2msg">"connect to your account "</string>
+    <string name="log_username">"Username "</string>
+    <string name="log_pwd">forgotten password</string>
+    <string name="log_cnx">connect</string>
+</resources>
